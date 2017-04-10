@@ -1,0 +1,9 @@
+
+This is VHE client and server program.
+Client and server are both build with python. Client also use Gtk for GUI.
+VHE encrypt scheme is build with ntl lib under C++.
+Some big files weren't uploaded.
+Mail me for more information.
+
+Name: Jin
+Email: jinbl94@outlook.com
