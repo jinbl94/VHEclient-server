@@ -15,7 +15,8 @@ gi.require_version('Gtk','3.0')
 from gi.repository import Gtk
 
 ## server ip and service port are needed
-SERVER_ADDR="127.0.0.1"
+## SERVER_ADDR="192.168.56.101"
+SERVER_ADDR="123.207.16.31"
 SEARCH_PORT=6666
 MAIL_PORT=7777
 

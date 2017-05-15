@@ -121,6 +121,7 @@ void VHE::init(int size_n){
 	T=getrandommatrix(size_n,1,tBound);
 	A=getrandommatrix(1,size_n,aBound);
 	secretkey=hcat(I,T)*lmatrix;
+	mat_ZZ tempmatrix=hcat(I,T);
 	publickey=rmatrix*vcat(w*I-T*A,A);
 }
 
