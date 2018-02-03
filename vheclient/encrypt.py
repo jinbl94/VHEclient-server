@@ -5,10 +5,9 @@
 ## that's normal, don't panic
 
 from hevector import evaluate
-from model import features
-
 import pickle
 
+features=pickle.load(open('features','rb'))
 filenames=pickle.load(open('filenames','rb'))
 featuremat=[]
 bannedcharacters=set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~0123456789')
@@ -18,20 +17,17 @@ def simplify(text):
 
 def getfeature(text):
 	feature=[0]*len(features)
-	feature[0]=1
 	wordlist=simplify(text).split()
 	for w in wordlist:
 		feature[features[w]]+=1
-	for i in feature:
-		if i!=0:
-			print(i,end=' ')
-	print('')
 	return tuple(feature,)
 
-for i in range(10):
+for i in range(len(filenames)):
 	doc=open(filenames[i],'rb').read().decode('utf-8','ignore')
 	if doc!="":
 		featuremat.append(getfeature(doc))
+
+print("features extracted")
 
 secretkey,publickey,ciphertext=evaluate([featuremat,"encrypt"])
 

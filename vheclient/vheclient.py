@@ -1,7 +1,6 @@
 #! /usr/bin/python
 ## vhe client with GUI
 from hevector import evaluate
-from model import features
 from message import send_msg
 from message import recv_msg
 
@@ -16,10 +15,11 @@ from gi.repository import Gtk
 
 ## server ip and service port are needed
 ## SERVER_ADDR="192.168.56.101"
-SERVER_ADDR="123.207.16.31"
+SERVER_ADDR="192.168.56.101"
 SEARCH_PORT=6666
 MAIL_PORT=7777
 
+features=pickle.load(open('features','rb'))
 filenames=pickle.load(open('filenames','rb'))
 bannedcharacters=set('!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~0123456789')
 
@@ -28,7 +28,6 @@ def simplify(text):
 
 def getfeature(text):
 	feature=[0]*len(features)
-	feature[0]=1
 	wordlist=simplify(text).split()
 	if len(wordlist)==0:
 		return
@@ -41,10 +40,8 @@ def serverresult(matrix):
 	s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 	s.connect((SERVER_ADDR,SEARCH_PORT))
 	datasend=pickle.dumps(matrix)
-	print("sending data to server")
 	send_msg(s,datasend)
 	datareceive=recv_msg(s)
-	print("received results")
 	results=pickle.loads(datareceive)
 	s.close()
 	return results
@@ -56,10 +53,8 @@ def getsearchresults(text):
 	with open('secretkey','rb') as f:
 		secretkey=pickle.load(f)
 		f.close()
-		print("calculating new key pair")
 		newsecretkey,newpublickey=evaluate([featurevec,secretkey,'getltkeypair'])
 		newciphertext=serverresult(newpublickey)
-		print("decrypt ciphertext results")
 		resultvec,=evaluate([newciphertext,newsecretkey,'decrypt'])
 		results=[]
 		for i in range(len(resultvec)):
@@ -69,12 +64,14 @@ def getsearchresults(text):
 
 ## get content of an email
 def getmail(i):
+	print("mail request")
+	if i<0 or i>=len(filenames):
+		return "error: out of range!"
 	s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 	s.connect((SERVER_ADDR,MAIL_PORT))
 	datasend=pickle.dumps(i)
 	send_msg(s,datasend)
 	datareceive=recv_msg(s)
-	print("received mail")
 	results=pickle.loads(datareceive)
 	s.close()
 	return results
@@ -89,9 +86,9 @@ class StackWindow(Gtk.Window):
 		self.set_default_size(600,400)
 		self.add(grid)
 		
-		stack=Gtk.Stack()
-		stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
-		stack.set_transition_duration(100)
+		self.stack=Gtk.Stack()
+		self.stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
+		self.stack.set_transition_duration(100)
 		
 		searchsw=Gtk.ScrolledWindow()
 		searchsw.set_vexpand(True)
@@ -105,7 +102,7 @@ class StackWindow(Gtk.Window):
 		searchgrid=Gtk.Grid()
 		searchgrid.attach(searchsw,0,0,3,1)
 		searchgrid.attach(searchbutton,2,3,1,1)
-		stack.add_titled(searchgrid,"search","Search")
+		self.stack.add_titled(searchgrid,"search","Search")
 		
 		resultsw=Gtk.ScrolledWindow()
 		resultsw.set_vexpand(True)
@@ -119,7 +116,7 @@ class StackWindow(Gtk.Window):
 		resultgrid=Gtk.Grid()
 		resultgrid.attach(resultsw,0,0,3,1)
 		resultgrid.attach(resultlabel,0,1,3,1)
-		stack.add_titled(resultgrid,"result","Results")
+		self.stack.add_titled(resultgrid,"result","Results")
 		
 		logsw=Gtk.ScrolledWindow()
 		logsw.set_vexpand(True)
@@ -129,7 +126,7 @@ class StackWindow(Gtk.Window):
 		logtext.set_editable(False)
 		self.logbuffer=logtext.get_buffer()
 		logsw.add(logtext)
-		stack.add_titled(logsw,"log","Log")
+		self.stack.add_titled(logsw,"log","Log")
 
 		mailsw=Gtk.ScrolledWindow()
 		mailsw.set_vexpand(True)
@@ -146,15 +143,16 @@ class StackWindow(Gtk.Window):
 		mailgrid.attach(mailsw,0,0,3,1)
 		mailgrid.attach(self.numentry,0,1,1,1)
 		mailgrid.attach(mailbutton,1,1,1,1)
-		stack.add_titled(mailgrid,"mail","Mail")
+		self.stack.add_titled(mailgrid,"mail","Mail")
 		
 		stack_switcher=Gtk.StackSwitcher(orientation=Gtk.Orientation.VERTICAL)
-		stack_switcher.set_stack(stack)
+		stack_switcher.set_stack(self.stack)
 
 		grid.attach(stack_switcher,0,0,1,3)
-		grid.attach(stack,1,0,3,3)
+		grid.attach(self.stack,1,0,3,3)
 	
 	def on_search(self,widget):
+		print("search request")
 		self.write_log("searching\n")
 		self.resultbuffer.delete(self.resultbuffer.get_start_iter(),self.resultbuffer.get_end_iter())
 		text=self.searchbuffer.get_text(self.searchbuffer.get_start_iter(),self.searchbuffer.get_end_iter(),True)
@@ -167,7 +165,9 @@ class StackWindow(Gtk.Window):
 			return
 		self.write_log("search compeleted\n")
 		self.write_results(results)
-		print("done")
+		display=self.stack.get_child_by_name("result")
+		self.stack.set_visible_child(display)
+		print("succeed")
 
 	def on_view(self,widget):
 		self.mailbuffer.delete(self.mailbuffer.get_start_iter(),self.mailbuffer.get_end_iter())

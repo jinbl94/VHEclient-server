@@ -66,6 +66,7 @@ int main() {
 				code=-1;
 		}
 	}
+//	VHE vhe;
 //	int N=10;
 //	mat_ZZ x,c,cc,g,ss,mm;
 //	x.SetDims(N,N);

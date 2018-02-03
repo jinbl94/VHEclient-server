@@ -107,6 +107,12 @@ const void nearestinteger(mat_ZZ& matrix,const ZZ& w){
 	return;
 }
 
+const mat_ZZ keyswitch(mat_ZZ& oldkey,mat_ZZ& T){
+	mat_ZZ A;
+	A=getrandommatrix(1,oldkey.NumCols(),aBound);
+	return vcat(oldkey-T*A,A);
+}
+
 /*
    VHE functions
    */
@@ -166,12 +172,12 @@ mat_ZZ VHE::newdecrypt(const mat_ZZ& ciphertext){
 void VHE::setltmatrix(const mat_ZZ& matrix){
 	mat_ZZ lmatrix,rmatrix;
 	getinvertiblematrix(matrix.NumRows()+1,lmatrix,rmatrix);
-	mat_ZZ I,T,A;
-	ident(I,matrix.NumRows());
+	mat_ZZ I,T;
 	T=getrandommatrix(matrix.NumRows(),1,tBound);
-	A=getrandommatrix(1,secretkey.NumCols(),aBound);
+	ident(I,matrix.NumRows());
 	newsecretkey=hcat(I,T)*lmatrix;
-	newpublickey=rmatrix*vcat(matrix*secretkey-T*A,A);
+	mat_ZZ GS=matrix*secretkey;
+	newpublickey=rmatrix*keyswitch(GS,T);
 }
 
 mat_ZZ VHE::getsecretkey(){return secretkey;}

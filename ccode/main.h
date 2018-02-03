@@ -7,9 +7,9 @@
 #include <string>
 #define OPNUM 4
 
-const char* operations[]={"matrix","encrypt","encrypt_m","decrypt","getltkeypair"};
-
 VHE vhe;
+
+const char* operations[]={"matrix","encrypt","encrypt_m","decrypt","getltkeypair"};
 
 int parseop(string op){
 	int i=0;
@@ -47,11 +47,11 @@ const void getltkeypair(const mat_ZZ& matrix,const mat_ZZ& secretkey){
 }
 
 //return inner product key pair which is constructed with H and two secretkeys
-const void getipkeypair(const mat_ZZ& secretkey1,const mat_ZZ& secretkey2,const mat_ZZ& hmatrix){
-	mat_ZZ matrix;
-	mat_ZZ secretkey=transpose(vectorize(transpose(secretkey1)*hmatrix*secretkey2));
-	ident(matrix,secretkey.NumRows());
+const void getipkeypair(const mat_ZZ& secretkey1,const mat_ZZ& secretkey2,mat_ZZ& Newpublickey,mat_ZZ Newsecretkey){
+	mat_ZZ secretkey=transpose(vectorize(transpose(secretkey1)*secretkey2));
 	vhe.setsecretkey(secretkey);
+	mat_ZZ matrix;
+	ident(matrix,secretkey.NumRows());
 	vhe.setltmatrix(matrix);
 	cout<<vhe.getnewsecretkey()<<endl;
 	cout<<vhe.getnewpublickey()<<endl;

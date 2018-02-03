@@ -23,12 +23,13 @@ class Mailsubserver(threading.Thread):
 		self.c=clientsocket
 
 	def run(self):
+		print("processing mail request")
 		self.datareceive=recv_msg(self.c)
 		self.filenum=pickle.loads(self.datareceive)
 		self.mailcontent=open(filenames[self.filenum],'rb').read().decode('utf-8','ignore')
 		self.datasend=pickle.dumps(self.mailcontent)
-		print("sending mail to client")
 		send_msg(self.c,self.datasend)
+		print("compelete")
 		self.c.close()
 
 class Mailserver(threading.Thread):
@@ -60,14 +61,13 @@ class Searchsubserver(threading.Thread):
 		self.c=clientsocket
 
 	def run(self):
+		print("processing search request")
 		self.datareceive=recv_msg(self.c)
-		print("get publickey from client")
 		self.publickey=pickle.loads(self.datareceive)
-		print("calculating")
 		self.results,=evaluate([filefeatures,self.publickey,'encrypt_m'])
 		self.datasend=pickle.dumps(self.results)
-		print("sending result to client")
 		send_msg(self.c,self.datasend)
+		print("compelete")
 		self.c.close()
 
 class Searchserver(threading.Thread):
